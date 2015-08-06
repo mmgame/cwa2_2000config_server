@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<bean id="welcomeFiles" class="java.util.ArrayList">
+		<constructor-arg>
+			<list>
+				<value>login.jsp</value>
+			</list>
+		</constructor-arg>
+	</bean>
+	
+	<bean id="servletContextHandler" class="org.eclipse.jetty.webapp.WebAppContext">
+		<constructor-arg index="0" value="webapp"/>
+		<constructor-arg index="1" value=""/>
+		<property name="welcomeFiles" ref="welcomeFiles" />
+	</bean>
+	
+	<bean id="passwordManager" class="com.cwa.server.config.manager.PasswordManager" init-method="init">
+		<property name="passwordFilePath" value="${passwd.file}" />
+	</bean>
+	<bean id="loginServlet" class="com.cwa.server.config.http.servlet.LoginServlet">
+		<property name="passwordManager" ref="passwordManager" />
+	</bean>
+	<bean id="increaseRegionAndDBinfoServlet" class="com.cwa.server.config.http.servlet.IncreaseRegionAndDBinfoServlet">
+		<property name="context" ref="configService" />
+		<property name="serviceFactory" ref="dbServiceFactory" />
+	</bean>
+	<bean id="increaseRegionInfoServlet" class="com.cwa.server.config.http.servlet.IncreaseRegionInfoServlet">
+		<property name="context" ref="configService" />
+	</bean>
+	<bean id="increaseRegionServlet" class="com.cwa.server.config.http.servlet.IncreaseRegionServlet">
+		<property name="context" ref="configService" />
+	</bean>
+	<bean id="showDBConfigServlet" class="com.cwa.server.config.http.servlet.ShowDBConfigServlet">
+		<property name="context" ref="configService" />
+	</bean>
+	<bean id="showRegionInfoServlet" class="com.cwa.server.config.http.servlet.ShowRegionInfoServlet">
+		<property name="context" ref="configService" />
+	</bean>
+	
+	<bean id="servletMap" class="java.util.HashMap">
+		<constructor-arg>
+			<map>
+				<!-- 这里的key映射servelt -->
+				<entry key="/login" value-ref="loginServlet" />
+				<entry key="/increaseRegionAndDBinfo" value-ref="increaseRegionAndDBinfoServlet" />
+				<entry key="/increaseRegionInfo" value-ref="increaseRegionInfoServlet" />
+				<entry key="/increaseRegion" value-ref="increaseRegionServlet" />
+				<entry key="/showDBConfig" value-ref="showDBConfigServlet" />
+				<entry key="/showRegionInfo" value-ref="showRegionInfoServlet" />
+			</map>
+		</constructor-arg>
+	</bean>
+	
+	<!-- ice config service实现类 -->
+	<bean id="configService" class="com.cwa.server.config.ConfigService" >
+		<property name="dbIp" value="${config_db.ip}" />
+		<property name="dbPort" value="${config_db.port}" />
+		<property name="dbUser" value="${config_db.user}" />
+		<property name="dbPassword" value="${config_db.password}" />
+		<property name="dbName" value="${config_db.dbname}" />
+		<property name="mybatis" value="${config_db.mybatis}" />
+		<property name="regionMap" value="${config_db.regionmap}" />
+	</bean>
+	
+	<bean id="configServiceI" class="com.cwa.server.config.service.ConfigServiceI" >
+		<property name="configService" ref="configService" />
+	</bean>
+	
+	<!-- ice event service实现类 -->
+	<bean id="eventHandlerMap" class="java.util.HashMap">
+		<constructor-arg>
+			<map>
+				<!-- <entry key="daofight.DataStateEvent" value-ref="answer_dataStateEventHandler" />  -->
+			</map>
+		</constructor-arg>
+	</bean>
+	<bean id="eventListenerI" class="com.cwa.component.event.ice.EventListenerI" >
+		<property name="eventHandlerMap" ref="eventHandlerMap" />
+	</bean>
+	
+	<!-- ice serviceImpl map -->
+	<bean id="serviceImplMap" class="java.util.HashMap">
+		<constructor-arg>
+			<map>
+				<!-- {serviceName:serviceI} -->
+				<entry key="IEventListener" value-ref="eventListenerI" />
+				<entry key="IConfigService" value-ref="configServiceI" />
+			</map>
+		</constructor-arg>
+	</bean>
+	
+</beans>
